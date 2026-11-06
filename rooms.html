@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rooms | Haven Hotel</title><link rel="stylesheet" href="/style.css"></head>
+<body><nav><a class="brand" href="/">Haven Hotel</a><div class="links" id="nav-links"></div></nav>
+
+<main class="container"><div class="section-head"><div><div class="eyebrow">Find your comfort</div><h1 class="page-title">Our rooms</h1><p class="muted">Choose the room that makes your stay memorable.</p></div></div>
+<form class="panel filters" id="room-search"><div class="field"><label>Check-in</label><input type="date" name="check_in"></div><div class="field"><label>Check-out</label><input type="date" name="check_out"></div><div class="field"><label>Room type</label><select name="room_type"><option value="">All types</option><option>Single Room</option><option>Double Room</option><option>Deluxe Room</option><option>Suite Room</option><option>Family Room</option></select></div><div class="field"><label>Minimum price (₹)</label><input type="number" name="min_price" min="0" placeholder="Any"></div><div class="field"><label>Maximum price (₹)</label><input type="number" name="max_price" min="0" placeholder="Any"></div><button type="submit">Apply filters</button></form>
+<div id="room-list" class="room-grid"></div></main>
+<footer>© 2026 Haven Hotel · A comfortable stay, made simple.</footer><script src="/script.js"></script></body></html>
