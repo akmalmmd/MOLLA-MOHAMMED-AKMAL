@@ -1,30 +1,37 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
-function authenticate(req, res, next) {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ message: 'Please log in first.' });
+const JWT_SECRET = process.env.JWT_SECRET || 'hotel_booking_jwt_secret_token_key_2026';
 
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ message: 'Your session is invalid or expired. Please log in again.' });
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Access token required' });
   }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access is required.' });
-  }
-  next();
+  authenticateToken(req, res, () => {
+    if (req.user && req.user.role === 'admin') {
+      next();
+    } else {
+      res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+  });
 }
 
-function requireCustomer(req, res, next) {
-  if (!req.user || req.user.role !== 'customer') {
-    return res.status(403).json({ message: 'Customer access is required.' });
-  }
-  next();
-}
-
-module.exports = { authenticate, requireAdmin, requireCustomer };
+module.exports = {
+  authenticateToken,
+  requireAdmin,
+  JWT_SECRET
+};

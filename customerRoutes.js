@@ -1,85 +1,96 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-const pool = require('../db');
-const { authenticate } = require('../middleware/auth');
-
 const router = express.Router();
-const validate = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
-  next();
-};
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const db = require('../db');
+const { authenticateToken, JWT_SECRET } = require('../middleware/auth');
 
-router.post('/register',
-  body('name').trim().isLength({ min: 2, max: 150 }).withMessage('Name must contain 2 to 150 characters.'),
-  body('email').trim().isEmail().withMessage('Enter a valid email address.'),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.'),
-  body('phone').optional({ values: 'falsy' }).isLength({ max: 20 }).withMessage('Phone number is too long.'),
-  validate,
-  async (req, res, next) => {
-    try {
-      const { name, email, password, phone } = req.body;
-      const [existing] = await pool.execute('SELECT id FROM customers WHERE email = ?', [email.toLowerCase()]);
-      if (existing.length) return res.status(409).json({ message: 'An account with this email already exists.' });
-      const hash = await bcrypt.hash(password, 12);
-      const [result] = await pool.execute(
-        'INSERT INTO customers (name,email,password,phone,role) VALUES (?,?,?,?,?)',
-        [name, email.toLowerCase(), hash, phone || null, 'customer']
-      );
-      res.status(201).json({ message: 'Registration successful. You can now log in.', customerId: result.insertId });
-    } catch (err) { next(err); }
-  }
-);
-
-router.post('/login',
-  body('email').trim().isEmail().withMessage('Enter a valid email address.'),
-  body('password').notEmpty().withMessage('Password is required.'),
-  validate,
-  async (req, res, next) => {
-    try {
-      const [rows] = await pool.execute(
-        'SELECT id,name,email,password,role,phone FROM customers WHERE email = ?',
-        [req.body.email.toLowerCase()]
-      );
-      if (!rows.length || !(await bcrypt.compare(req.body.password, rows[0].password))) {
-        return res.status(401).json({ message: 'Incorrect email or password.' });
-      }
-      const user = rows[0];
-      const token = jwt.sign(
-        { id: user.id, name: user.name, email: user.email, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '8h' }
-      );
-      res.json({
-        message: 'Login successful.',
-        token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone }
-      });
-    } catch (err) { next(err); }
-  }
-);
-
-router.get('/:id', authenticate, async (req, res, next) => {
+// POST /api/customers/register
+router.post('/register', async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    if (req.user.role !== 'admin' && req.user.id !== id) return res.status(403).json({ message: 'You can only view your own profile.' });
-    const [rows] = await pool.execute('SELECT id,name,email,phone,role,created_at FROM customers WHERE id = ?', [id]);
-    if (!rows.length) return res.status(404).json({ message: 'Customer not found.' });
-    res.json(rows[0]);
-  } catch (err) { next(err); }
+    const { name, email, password, phone } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+    }
+
+    const [existing] = await db.query('SELECT id FROM customers WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, message: 'An account with this email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result] = await db.query(
+      'INSERT INTO customers (name, email, password, phone) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, phone || '']
+    );
+
+    const token = jwt.sign({ id: result.insertId, email, name, role: 'customer' }, JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      token,
+      customer: { id: result.insertId, name, email, phone: phone || '' }
+    });
+  } catch (error) {
+    console.error('Customer register error:', error);
+    res.status(500).json({ success: false, message: 'Database error occurred during registration' });
+  }
 });
 
-router.put('/:id', authenticate, async (req, res, next) => {
+// POST /api/customers/login
+router.post('/login', async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    if (req.user.role !== 'admin' && req.user.id !== id) return res.status(403).json({ message: 'You can only update your own profile.' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    const [rows] = await db.query('SELECT * FROM customers WHERE email = ?', [email]);
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    const customer = rows[0];
+    const match = await bcrypt.compare(password, customer.password);
+    if (!match) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    const role = customer.email === 'admin@grandpalace.com' ? 'admin' : 'customer';
+    const token = jwt.sign({ id: customer.id, email: customer.email, name: customer.name, role }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone, role }
+    });
+  } catch (error) {
+    console.error('Customer login error:', error);
+    res.status(500).json({ success: false, message: 'Server error during login' });
+  }
+});
+
+// GET /api/customers/:id
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT id, name, email, phone, created_at FROM customers WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Customer not found' });
+    res.json({ success: true, customer: rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /api/customers/:id
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
     const { name, phone } = req.body;
-    if (!name || name.trim().length < 2) return res.status(400).json({ message: 'Enter a valid name.' });
-    await pool.execute('UPDATE customers SET name=?, phone=? WHERE id=?', [name.trim(), phone || null, id]);
-    res.json({ message: 'Profile updated successfully.' });
-  } catch (err) { next(err); }
+    await db.query('UPDATE customers SET name = COALESCE(?, name), phone = COALESCE(?, phone) WHERE id = ?', [name, phone, req.params.id]);
+    res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 module.exports = router;

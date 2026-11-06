@@ -1,7 +1,80 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register | Haven Hotel</title><link rel="stylesheet" href="/style.css"></head>
-<body><nav><a class="brand" href="/">Haven Hotel</a><div class="links" id="nav-links"></div></nav>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Registration - The Grand Azure</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">👑 The Grand Azure</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="login.html">Sign In</a></li>
+    </ul>
+  </nav>
 
-<main class="container"><form class="auth-wrap" id="register-form"><div class="eyebrow">Join Haven Hotel</div><h1>Create account</h1><div id="message" class="hidden"></div><div class="field"><label>Full name</label><input name="name" required minlength="2"></div><div class="field"><label>Email address</label><input type="email" name="email" required></div><div class="field"><label>Phone</label><input name="phone" maxlength="20"></div><div class="field"><label>Password (minimum 8 characters)</label><input type="password" name="password" required minlength="8"></div><div class="field"><label>Confirm password</label><input type="password" name="confirm_password" required minlength="8"></div><button type="submit" class="btn">Create account</button><p class="muted">Already registered? <a href="/login.html">Login</a>.</p></form></main>
-<footer>© 2026 Haven Hotel · A comfortable stay, made simple.</footer><script src="/script.js"></script></body></html>
+  <div class="auth-container">
+    <h2 style="font-family: var(--font-serif); font-size: 1.8rem; margin-bottom: 0.5rem; text-align: center;">Customer Registration</h2>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+      Create an account to book luxury suites and view reservations
+    </p>
+
+    <div id="errorMsg" style="display:none; padding:0.75rem; background:#fee2e2; color:#b91c1c; border-radius:8px; font-size:0.85rem; margin-bottom:1rem;"></div>
+
+    <form onsubmit="handleRegister(event)" style="display:flex; flex-direction:column; gap:1.2rem;">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required placeholder="Eleanor Vance">
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required placeholder="name@example.com">
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" placeholder="+1 (555) 000-0000">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-primary" style="justify-content:center; padding:0.85rem; font-size:1rem;">Register Account</button>
+    </form>
+
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+      Already have an account? <a href="login.html" style="color: var(--accent); font-weight: 600;">Sign in here</a>
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    async function handleRegister(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('errorMsg');
+      errBox.style.display = 'none';
+
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await apiRequest('/customers/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, phone, password })
+        });
+
+        setAuth(res.token, res.customer);
+        window.location.href = 'rooms.html';
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

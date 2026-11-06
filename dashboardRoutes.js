@@ -1,24 +1,37 @@
 const express = require('express');
-const pool = require('../db');
-const { authenticate, requireAdmin } = require('../middleware/auth');
 const router = express.Router();
+const db = require('../db');
+const { requireAdmin } = require('../middleware/auth');
 
-router.get('/', authenticate, requireAdmin, async (req, res, next) => {
+// GET /api/dashboard - Admin Dashboard KPIs
+router.get('/', requireAdmin, async (req, res) => {
   try {
-    const [customers] = await pool.execute("SELECT COUNT(*) AS total FROM customers WHERE role='customer'");
-    const [rooms] = await pool.execute('SELECT COUNT(*) AS total FROM rooms');
-    const [available] = await pool.execute("SELECT COUNT(*) AS total FROM rooms WHERE status='Available'");
-    const [bookings] = await pool.execute('SELECT COUNT(*) AS total FROM bookings');
-    const [confirmed] = await pool.execute("SELECT COUNT(*) AS total FROM bookings WHERE booking_status='Confirmed'");
-    const [cancelled] = await pool.execute("SELECT COUNT(*) AS total FROM bookings WHERE booking_status='Cancelled'");
+    const [[{ total_customers }]] = await db.query("SELECT COUNT(*) AS total_customers FROM customers WHERE email != 'admin@grandpalace.com'");
+    const [[{ total_rooms }]] = await db.query('SELECT COUNT(*) AS total_rooms FROM rooms');
+    const [[{ available_rooms }]] = await db.query("SELECT COUNT(*) AS available_rooms FROM rooms WHERE status = 'Available'");
+    const [[{ total_bookings }]] = await db.query('SELECT COUNT(*) AS total_bookings FROM bookings');
+    const [[{ confirmed_bookings }]] = await db.query("SELECT COUNT(*) AS confirmed_bookings FROM bookings WHERE booking_status = 'Confirmed'");
+    const [[{ cancelled_bookings }]] = await db.query("SELECT COUNT(*) AS cancelled_bookings FROM bookings WHERE booking_status = 'Cancelled'");
+    const [[{ completed_bookings }]] = await db.query("SELECT COUNT(*) AS completed_bookings FROM bookings WHERE booking_status = 'Completed'");
+    const [[{ total_revenue }]] = await db.query("SELECT COALESCE(SUM(total_price), 0) AS total_revenue FROM bookings WHERE booking_status != 'Cancelled'");
+
     res.json({
-      totalCustomers: customers[0].total,
-      totalRooms: rooms[0].total,
-      availableRooms: available[0].total,
-      totalBookings: bookings[0].total,
-      confirmedBookings: confirmed[0].total,
-      cancelledBookings: cancelled[0].total
+      success: true,
+      stats: {
+        totalCustomers: Number(total_customers),
+        totalRooms: Number(total_rooms),
+        availableRooms: Number(available_rooms),
+        totalBookings: Number(total_bookings),
+        confirmedBookings: Number(confirmed_bookings),
+        cancelledBookings: Number(cancelled_bookings),
+        completedBookings: Number(completed_bookings),
+        totalRevenue: Number(total_revenue)
+      }
     });
-  } catch (err) { next(err); }
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
+
 module.exports = router;

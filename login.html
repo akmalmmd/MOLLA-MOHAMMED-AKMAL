@@ -1,7 +1,93 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login | Haven Hotel</title><link rel="stylesheet" href="/style.css"></head>
-<body><nav><a class="brand" href="/">Haven Hotel</a><div class="links" id="nav-links"></div></nav>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - The Grand Azure</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">👑 The Grand Azure</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms</a></li>
+      <li><a href="login.html" class="active">Sign In</a></li>
+    </ul>
+  </nav>
 
-<main class="container"><form class="auth-wrap" id="login-form"><div class="eyebrow">Welcome back</div><h1>Login to your account</h1><div id="message" class="hidden"></div><div class="field"><label>Email address</label><input type="email" name="email" required></div><div class="field"><label>Password</label><input type="password" name="password" required></div><button type="submit" class="btn">Login</button><p class="muted">New here? <a href="/register.html">Create an account</a>.</p><p class="muted">Admin? Use the administrator account created from the backend setup command.</p></form></main>
-<footer>© 2026 Haven Hotel · A comfortable stay, made simple.</footer><script src="/script.js"></script></body></html>
+  <div class="auth-container">
+    <h2 style="font-family: var(--font-serif); font-size: 1.8rem; margin-bottom: 0.5rem; text-align: center;">Welcome Back</h2>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">
+      Sign in to manage your stays and hotel bookings
+    </p>
+
+    <!-- Quick Demo Buttons -->
+    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:0.75rem; margin-bottom:1.25rem;">
+      <p style="font-size:0.75rem; font-weight:700; color:#92400e; margin-bottom:0.5rem;">QUICK TEST LOGINS:</p>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button type="button" onclick="fillTest('alice')" style="padding:0.25rem 0.5rem; font-size:0.75rem; border-radius:4px; border:1px solid #f59e0b; background:#fff; cursor:pointer;">Alice (Customer)</button>
+        <button type="button" onclick="fillTest('admin')" style="padding:0.25rem 0.5rem; font-size:0.75rem; border-radius:4px; border:1px solid #0f172a; background:#0f172a; color:#fde68a; cursor:pointer;">Hotel Admin</button>
+      </div>
+    </div>
+
+    <div id="errorMsg" style="display:none; padding:0.75rem; background:#fee2e2; color:#b91c1c; border-radius:8px; font-size:0.85rem; margin-bottom:1rem;"></div>
+
+    <form onsubmit="handleLogin(event)" style="display:flex; flex-direction:column; gap:1.2rem;">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required placeholder="name@example.com">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-primary" style="justify-content:center; padding:0.85rem; font-size:1rem;">Sign In</button>
+    </form>
+
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+      Don't have an account? <a href="register.html" style="color: var(--accent); font-weight: 600;">Register here</a>
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    function fillTest(type) {
+      if (type === 'alice') {
+        document.getElementById('email').value = 'alice@example.com';
+        document.getElementById('password').value = 'password123';
+      } else if (type === 'admin') {
+        document.getElementById('email').value = 'admin@grandpalace.com';
+        document.getElementById('password').value = 'admin123';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('errorMsg');
+      errBox.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await apiRequest('/customers/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        setAuth(res.token, res.customer);
+        if (res.customer.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'my-bookings.html';
+        }
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

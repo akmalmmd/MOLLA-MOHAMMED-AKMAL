@@ -1,0 +1,6 @@
+{
+  "name": "Online Hotel Booking Management System",
+  "description": "A full-stack Online Hotel Booking Management System with customer reservation flow, room availability management, real-time date conflict checking, admin dashboard, and MySQL database integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

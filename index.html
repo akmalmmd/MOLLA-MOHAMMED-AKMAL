@@ -1,14 +1,73 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home | Haven Hotel</title><link rel="stylesheet" href="/style.css"></head>
-<body><nav><a class="brand" href="/">Haven Hotel</a><div class="links" id="nav-links"></div></nav>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Grand Azure - Luxury Hotel & Resort</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">👑 The Grand Azure</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="rooms.html">Rooms & Suites</a></li>
+      <li><a href="my-bookings.html">My Bookings</a></li>
+      <li><a href="admin.html">Admin Portal</a></li>
+      <li id="authNavItem"><a href="login.html" class="btn-primary">Sign In</a></li>
+    </ul>
+  </nav>
 
-<section class="hero"><div class="hero-content"><div class="eyebrow">Welcome to Haven Hotel</div><h1>Stay somewhere<br>that feels special.</h1><p>Discover thoughtfully designed rooms, warm hospitality and an effortless booking experience.</p><a class="btn gold" href="/rooms.html">Explore rooms</a></div></section>
-<main class="container"><form class="search-panel" id="room-search"><div class="search-grid">
-<div class="field"><label>Check-in</label><input type="date" name="check_in" min="2026-11-06"></div>
-<div class="field"><label>Check-out</label><input type="date" name="check_out" min="2026-11-07"></div>
-<div class="field"><label>Room type</label><select name="room_type"><option value="">Any type</option><option>Single Room</option><option>Double Room</option><option>Deluxe Room</option><option>Suite Room</option><option>Family Room</option></select></div>
-<div class="field"><label>Guests</label><input type="number" name="guests" min="1" placeholder="1"></div>
-<button type="submit">Search rooms</button></div></form>
-<div class="section-head"><div><div class="eyebrow">Your next stay</div><h2>Featured rooms</h2></div><a href="/rooms.html" class="btn light">View all rooms</a></div><div id="room-list" class="room-grid"></div></main>
-<footer>© 2026 Haven Hotel · A comfortable stay, made simple.</footer><script src="/script.js"></script></body></html>
+  <header class="hero">
+    <h1>Experience Timeless Elegance</h1>
+    <p>Discover an unforgettable sanctuary where luxury meets personalized hospitality.</p>
+  </header>
+
+  <section class="search-box">
+    <div class="form-group">
+      <label for="checkIn">Check-In Date</label>
+      <input type="date" id="checkIn">
+    </div>
+    <div class="form-group">
+      <label for="checkOut">Check-Out Date</label>
+      <input type="date" id="checkOut">
+    </div>
+    <div class="form-group">
+      <label for="roomType">Room Category</label>
+      <select id="roomType">
+        <option value="All">All Categories</option>
+        <option value="Single Room">Single Room</option>
+        <option value="Double Room">Double Room</option>
+        <option value="Deluxe Room">Deluxe Room</option>
+        <option value="Suite Room">Suite Room</option>
+        <option value="Family Room">Family Room</option>
+        <option value="Presidential Suite">Presidential Suite</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="guests">Guests</label>
+      <select id="guests">
+        <option value="1">1 Guest</option>
+        <option value="2" selected>2 Guests</option>
+        <option value="3">3 Guests</option>
+        <option value="4">4 Guests</option>
+        <option value="5">5+ Guests</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="searchRooms()">Find Rooms</button>
+  </section>
+
+  <main style="max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem;">
+    <h2 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1.5rem;">Featured Accommodations</h2>
+    <div id="roomContainer" class="room-grid"></div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initHomePage();
+    });
+  </script>
+</body>
+</html>

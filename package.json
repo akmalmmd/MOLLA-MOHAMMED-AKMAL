@@ -1,25 +1,21 @@
 {
-  "name": "hotel-booking-management-system",
+  "name": "hotel-booking-backend",
   "version": "1.0.0",
-  "description": "Online Hotel Booking Management System",
+  "description": "Node.js and Express REST API for Online Hotel Booking Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "create-admin": "node scripts/createAdmin.js",
-    "seed": "node scripts/seed.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "express-validator": "^7.2.1",
-    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.5"
+    "mysql2": "^3.12.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.9"
   }
 }

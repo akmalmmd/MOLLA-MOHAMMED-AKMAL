@@ -1,7 +1,92 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Bookings | Haven Hotel</title><link rel="stylesheet" href="/style.css"></head>
-<body><nav><a class="brand" href="/">Haven Hotel</a><div class="links" id="nav-links"></div></nav>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings - The Grand Azure</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="brand">👑 The Grand Azure</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="rooms.html">Rooms & Suites</a></li>
+      <li><a href="my-bookings.html" class="active">My Bookings</a></li>
+      <li><a href="admin.html">Admin Portal</a></li>
+      <li id="authNavItem"><a href="login.html" class="btn-primary">Sign In</a></li>
+    </ul>
+  </nav>
 
-<main class="container"><div class="section-head"><div><div class="eyebrow">Your reservations</div><h1 class="page-title">My bookings</h1><p class="muted">Review your reservations and cancel active bookings.</p></div><a class="btn light" href="/rooms.html">Book a room</a></div><div id="booking-list"></div></main>
-<footer>© 2026 Haven Hotel · A comfortable stay, made simple.</footer><script src="/script.js"></script></body></html>
+  <main style="max-width: 1000px; margin: 3rem auto; padding: 0 1.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+      <div>
+        <h1 style="font-family: var(--font-serif); font-size: 2.2rem; margin-bottom: 0.25rem;">My Reservations</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Review your stay itinerary and cancellation options.</p>
+      </div>
+      <a href="rooms.html" class="btn-primary">Book New Room</a>
+    </div>
+
+    <div id="bookingList" style="display:flex; flex-direction:column; gap:1.25rem;"></div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      updateNavAuth();
+      const user = getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      loadUserBookings();
+    });
+
+    async function loadUserBookings() {
+      const user = getCurrentUser();
+      const container = document.getElementById('bookingList');
+      try {
+        const data = await apiRequest(`/customers/${user.id}/bookings`);
+        if (data.bookings.length === 0) {
+          container.innerHTML = '<div style="background:white; padding:3rem; border-radius:12px; text-align:center; color:var(--text-muted); border:1px solid var(--border);">No reservations found. <a href="rooms.html" style="color:var(--accent); font-weight:600;">Explore rooms now</a></div>';
+          return;
+        }
+
+        container.innerHTML = data.bookings.map(b => `
+          <div style="background:white; border-radius:12px; border:1px solid var(--border); padding:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                <span class="badge ${b.booking_status === 'Confirmed' ? 'badge-confirmed' : b.booking_status === 'Cancelled' ? 'badge-cancelled' : 'badge-completed'}">${b.booking_status}</span>
+                <span style="font-size:0.8rem; color:var(--text-muted); font-family:monospace;">#BK-${String(b.id).padStart(4, '0')}</span>
+              </div>
+              <h3 style="font-family:var(--font-serif); font-size:1.25rem; margin-bottom:0.25rem;">${b.room_type} (Room #${b.room_number})</h3>
+              <p style="color:var(--text-muted); font-size:0.85rem;">Check-In: <strong>${b.check_in}</strong> | Check-Out: <strong>${b.check_out}</strong> | Guests: <strong>${b.guests}</strong></p>
+            </div>
+            <div style="text-align:right;">
+              <span style="display:block; font-size:0.8rem; color:var(--text-muted);">Total Paid / Due</span>
+              <span style="font-size:1.4rem; font-weight:800; color:var(--primary);">$${Number(b.total_price).toLocaleString()}</span>
+              <div style="margin-top:0.5rem;">
+                ${b.booking_status === 'Confirmed' ? `<button onclick="cancelBooking(${b.id})" style="background:none; border:1px solid #ef4444; color:#ef4444; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.8rem;">Cancel Reservation</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Are you sure you want to cancel this reservation? The room will immediately become available for other guests.')) return;
+      try {
+        await apiRequest(`/bookings/${id}/cancel`, { method: 'PUT' });
+        alert('Reservation cancelled successfully.');
+        loadUserBookings();
+      } catch (err) {
+        alert(err.message || 'Failed to cancel booking');
+      }
+    }
+  </script>
+</body>
+</html>
